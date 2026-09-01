@@ -8,7 +8,16 @@ import {
 } from "../services/authService";
 
 
-function Sidebar() {
+interface SidebarProps {
+  isOpen: boolean;
+  onClose: () => void;
+}
+
+
+function Sidebar({
+  isOpen,
+  onClose,
+}: SidebarProps) {
 
   const navigate = useNavigate();
 
@@ -33,11 +42,6 @@ function Sidebar() {
 
       } catch {
 
-        /*
-         * If token is invalid or expired,
-         * remove it and send user to login.
-         */
-
         logout();
 
         navigate("/login", {
@@ -47,7 +51,6 @@ function Sidebar() {
       }
 
     }
-
 
     loadUser();
 
@@ -60,12 +63,24 @@ function Sidebar() {
 
   function handleLogout() {
 
+    onClose();
+
     logout();
 
     navigate("/login", {
       replace: true,
     });
 
+  }
+
+
+  // ==========================================
+  // CLOSE SIDEBAR WHEN NAVIGATION ITEM
+  // IS CLICKED
+  // ==========================================
+
+  function handleNavigation() {
+    onClose();
   }
 
 
@@ -84,7 +99,11 @@ function Sidebar() {
 
   return (
 
-    <aside className="sidebar">
+    <aside
+      className={`sidebar ${
+        isOpen ? "sidebar-open" : ""
+      }`}
+    >
 
       {/* ======================================
           LOGO
@@ -112,6 +131,20 @@ function Sidebar() {
 
 
       {/* ======================================
+          MOBILE CLOSE BUTTON
+          ====================================== */}
+
+      <button
+        type="button"
+        className="sidebar-close-button"
+        onClick={onClose}
+        aria-label="Close navigation"
+      >
+        ×
+      </button>
+
+
+      {/* ======================================
           NAVIGATION
           ====================================== */}
 
@@ -126,6 +159,7 @@ function Sidebar() {
 
         <NavLink
           to="/dashboard"
+          onClick={handleNavigation}
           className={({ isActive }) =>
             `nav-item ${
               isActive ? "active" : ""
@@ -146,6 +180,7 @@ function Sidebar() {
 
         <NavLink
           to="/habits"
+          onClick={handleNavigation}
           className={({ isActive }) =>
             `nav-item ${
               isActive ? "active" : ""
@@ -166,6 +201,7 @@ function Sidebar() {
 
         <NavLink
           to="/tasks"
+          onClick={handleNavigation}
           className={({ isActive }) =>
             `nav-item ${
               isActive ? "active" : ""
@@ -186,6 +222,7 @@ function Sidebar() {
 
         <NavLink
           to="/progress"
+          onClick={handleNavigation}
           className={({ isActive }) =>
             `nav-item ${
               isActive ? "active" : ""
@@ -206,6 +243,7 @@ function Sidebar() {
 
         <NavLink
           to="/tracking-period"
+          onClick={handleNavigation}
           className={({ isActive }) =>
             `nav-item ${
               isActive ? "active" : ""
@@ -233,6 +271,7 @@ function Sidebar() {
 
         <NavLink
           to="/settings"
+          onClick={handleNavigation}
           className={({ isActive }) =>
             `nav-item ${
               isActive ? "active" : ""

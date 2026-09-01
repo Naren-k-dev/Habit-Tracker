@@ -1,10 +1,8 @@
 import os
 
-from datetime import (
-    datetime,
-    timedelta,
-    timezone,
-)
+from datetime import datetime, timedelta, timezone
+
+from dotenv import load_dotenv
 
 import jwt
 
@@ -21,6 +19,13 @@ from fastapi.security import (
 
 
 # ==========================================
+# LOAD ENVIRONMENT VARIABLES
+# ==========================================
+
+load_dotenv()
+
+
+# ==========================================
 # HTTP BEARER
 # ==========================================
 
@@ -31,20 +36,15 @@ bearer_scheme = HTTPBearer()
 # JWT CONFIGURATION
 # ==========================================
 
-SECRET_KEY = os.getenv(
-    "JWT_SECRET_KEY"
-)
-
+SECRET_KEY = os.getenv("JWT_SECRET_KEY")
 
 if not SECRET_KEY:
-
     raise RuntimeError(
         "JWT_SECRET_KEY is not configured"
     )
 
 
 ALGORITHM = "HS256"
-
 
 ACCESS_TOKEN_EXPIRE_MINUTES = 60
 
@@ -58,34 +58,22 @@ def create_access_token(
 ) -> str:
 
     expire = (
-        datetime.now(
-            timezone.utc
-        )
+        datetime.now(timezone.utc)
         + timedelta(
             minutes=ACCESS_TOKEN_EXPIRE_MINUTES
         )
     )
 
-
     payload = {
-
         "sub": str(user_id),
-
         "exp": expire,
-
     }
 
-
     token = jwt.encode(
-
         payload,
-
         SECRET_KEY,
-
-        algorithm=ALGORITHM
-
+        algorithm=ALGORITHM,
     )
-
 
     return token
 
@@ -102,41 +90,24 @@ def get_current_user(
 
     token = credentials.credentials
 
-
     try:
 
         payload = jwt.decode(
-
             token,
-
             SECRET_KEY,
-
-            algorithms=[
-                ALGORITHM
-            ]
-
+            algorithms=[ALGORITHM],
         )
 
-
-        user_id = payload.get(
-            "sub"
-        )
-
+        user_id = payload.get("sub")
 
         if user_id is None:
 
             raise HTTPException(
-
-                status_code=
-                    status.HTTP_401_UNAUTHORIZED,
-
+                status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Invalid token",
-
             )
 
-
         return int(user_id)
-
 
     except (
         jwt.ExpiredSignatureError,
@@ -145,11 +116,6 @@ def get_current_user(
     ):
 
         raise HTTPException(
-
-            status_code=
-                status.HTTP_401_UNAUTHORIZED,
-
-            detail=
-                "Invalid or expired token",
-
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid or expired token",
         )

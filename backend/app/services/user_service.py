@@ -2,27 +2,39 @@ from sqlalchemy.orm import Session
 
 from app.models import User
 from app.schemas.user import UserCreate
+
 from pwdlib import PasswordHash
 
 
 password_hash = PasswordHash.recommended()
 
 
-def create_user(db: Session, user_data: UserCreate) -> User:
-    # Check whether email already exists
+# ==========================================
+# CREATE USER
+# ==========================================
+
+def create_user(
+    db: Session,
+    user_data: UserCreate
+) -> User:
+
     existing_user = (
         db.query(User)
-        .filter(User.email == user_data.email)
+        .filter(
+            User.email == user_data.email
+        )
         .first()
     )
 
     if existing_user:
-        raise ValueError("Email already registered")
+        raise ValueError(
+            "Email already registered"
+        )
 
-    # Hash the password
-    hashed_password = password_hash.hash(user_data.password)
+    hashed_password = password_hash.hash(
+        user_data.password
+    )
 
-    # Create user
     user = User(
         name=user_data.name,
         email=user_data.email,
@@ -30,54 +42,146 @@ def create_user(db: Session, user_data: UserCreate) -> User:
     )
 
     db.add(user)
+
     db.commit()
+
     db.refresh(user)
 
     return user
 
 
+# ==========================================
+# GET USER
+# ==========================================
+
 def get_user(
     db: Session,
     user_id: int
 ) -> User | None:
+
     return (
         db.query(User)
-        .filter(User.id == user_id)
+        .filter(
+            User.id == user_id
+        )
         .first()
     )
 
+
+# ==========================================
+# VERIFY PASSWORD
+# ==========================================
 
 def verify_password(
     password: str,
     password_hash_value: str
 ) -> bool:
+
     return password_hash.verify(
         password,
         password_hash_value
     )
 
 
+# ==========================================
+# AUTHENTICATE USER
+# ==========================================
+
 def authenticate_user(
     db: Session,
     email: str,
     password: str
-) -> User:
-    # Find user by email
+) -> User | None:
+
     user = (
         db.query(User)
-        .filter(User.email == email)
+        .filter(
+            User.email == email
+        )
         .first()
     )
 
-    # Don't reveal whether the email exists
     if not user:
-        raise ValueError("Invalid email or password")
+        return None
 
-    # Verify password against stored hash
     if not verify_password(
         password,
         user.password_hash
     ):
-        raise ValueError("Invalid email or password")
+        return None
 
     return user
+
+
+# ==========================================
+# CHANGE PASSWORD
+# ==========================================
+
+def change_password(
+    db: Session,
+    user_id: int,
+    current_password: str,
+    new_password: str,
+) -> None:
+
+    # ------------------------------------------
+    # FIND USER
+    # ------------------------------------------
+
+    user = (
+        db.query(User)
+        .filter(
+            User.id == user_id
+        )
+        .first()
+    )
+
+    if not user:
+
+        raise ValueError(
+            "User not found"
+        )
+
+
+    # ------------------------------------------
+    # VERIFY CURRENT PASSWORD
+    # ------------------------------------------
+
+    if not verify_password(
+        current_password,
+        user.password_hash
+    ):
+
+        raise ValueError(
+            "Current password is incorrect"
+        )
+
+
+    # ------------------------------------------
+    # PREVENT SAME PASSWORD
+    # ------------------------------------------
+
+    if verify_password(
+        new_password,
+        user.password_hash
+    ):
+
+        raise ValueError(
+            "New password must be different from your current password"
+        )
+
+
+    # ------------------------------------------
+    # HASH NEW PASSWORD
+    # ------------------------------------------
+
+    user.password_hash = password_hash.hash(
+        new_password
+    )
+
+
+    # ------------------------------------------
+    # SAVE
+    # ------------------------------------------
+
+    db.commit()

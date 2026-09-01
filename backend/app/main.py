@@ -1,5 +1,7 @@
 import os
 
+from dotenv import load_dotenv
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -12,7 +14,16 @@ from app.api.routes import (
     daily_tasks,
     progress,
     tracking_periods,
+    streaks,
+    dashboard,
 )
+
+
+# ==========================================
+# LOAD ENVIRONMENT VARIABLES
+# ==========================================
+
+load_dotenv()
 
 
 # ==========================================
@@ -40,7 +51,7 @@ Base.metadata.create_all(
 
 FRONTEND_URL = os.getenv(
     "FRONTEND_URL",
-    "http://localhost:5173"
+    "http://localhost:5173",
 )
 
 
@@ -69,32 +80,42 @@ app.add_middleware(
 
 app.include_router(
     auth.router,
-    prefix="/api"
+    prefix="/api",
 )
 
 app.include_router(
     habits.router,
-    prefix="/api"
+    prefix="/api",
 )
 
 app.include_router(
     habit_completions.router,
-    prefix="/api"
+    prefix="/api",
 )
 
 app.include_router(
     daily_tasks.router,
-    prefix="/api"
+    prefix="/api",
 )
 
 app.include_router(
     progress.router,
-    prefix="/api"
+    prefix="/api",
 )
 
 app.include_router(
     tracking_periods.router,
-    prefix="/api"
+    prefix="/api",
+)
+
+app.include_router(
+    dashboard.router,
+    prefix="/api",
+)
+
+app.include_router(
+    streaks.router,
+    prefix="/api",
 )
 
 
