@@ -172,13 +172,16 @@ function Habits() {
   // INITIAL LOAD
   // ==========================================
 
-  useEffect(() => {
+useEffect(() => {
+  async function loadInitialData() {
+    await Promise.all([
+      loadHabits(),
+      loadTrackingPeriods(),
+    ]);
+  }
 
-    loadHabits();
-
-    loadTrackingPeriods();
-
-  }, []);
+  void loadInitialData();
+}, []);
 
 
   // ==========================================
@@ -475,8 +478,10 @@ function Habits() {
               form.start_date,
 
             end_date:
-              form.end_date ||
-              undefined,
+              form.end_date || undefined,
+
+            is_active:
+              editingHabit.is_active,
           }
         );
 

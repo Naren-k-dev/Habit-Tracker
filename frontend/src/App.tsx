@@ -1,30 +1,143 @@
-import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
+import {
+  BrowserRouter,
+  Navigate,
+  Route,
+  Routes,
+} from "react-router-dom";
 
 import DashboardLayout from "./layouts/DashboardLayout";
 
 import Dashboard from "./pages/Dashboard";
 import Habits from "./pages/Habits";
+import Login from "./pages/Login";
 import Progress from "./pages/Progress";
-import TrackingPeriod from "./pages/TrackingPeriod";
+import Register from "./pages/Register";
 import Settings from "./pages/Settings";
+import Tasks from "./pages/Tasks";
+import TrackingPeriod from "./pages/TrackingPeriod";
+
+
+import ProtectedRoute from "./components/ProtectedRoute";
 
 import "./App.css";
 
+
 function App() {
+
   return (
+
     <BrowserRouter>
+
       <Routes>
-        <Route element={<DashboardLayout />}>
-          <Route path="/" element={<Navigate to="/dashboard" replace />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/habits" element={<Habits />} />
-          <Route path="/progress" element={<Progress />} />
-          <Route path="/tracking-period" element={<TrackingPeriod />} />
-          <Route path="/settings" element={<Settings />} />
+
+        {/* ======================================
+            PUBLIC ROUTES
+        ====================================== */}
+
+        <Route
+          path="/login"
+          element={<Login />}
+        />
+
+        <Route
+          path="/register"
+          element={<Register />}
+        />
+
+
+        {/* ======================================
+            PROTECTED ROUTES
+        ====================================== */}
+
+        <Route element={<ProtectedRoute />}>
+
+          <Route element={<DashboardLayout />}>
+
+            {/* ROOT */}
+
+            <Route
+              path="/"
+              element={
+                <Navigate
+                  to="/dashboard"
+                  replace
+                />
+              }
+            />
+
+
+            {/* DASHBOARD */}
+
+            <Route
+              path="/dashboard"
+              element={<Dashboard />}
+            />
+
+
+            {/* HABITS */}
+
+            <Route
+              path="/habits"
+              element={<Habits />}
+            />
+
+
+            {/* TASKS */}
+
+            <Route
+              path="/tasks"
+              element={<Tasks />}
+            />
+
+
+            {/* PROGRESS */}
+
+            <Route
+              path="/progress"
+              element={<Progress />}
+            />
+
+
+            {/* TRACKING PERIOD */}
+
+            <Route
+              path="/tracking-period"
+              element={<TrackingPeriod />}
+            />
+
+
+            {/* SETTINGS */}
+
+            <Route
+              path="/settings"
+              element={<Settings />}
+            />
+
+          </Route>
+
         </Route>
+
+
+        {/* ======================================
+            UNKNOWN ROUTES
+        ====================================== */}
+
+        <Route
+          path="*"
+          element={
+            <Navigate
+              to="/dashboard"
+              replace
+            />
+          }
+        />
+
       </Routes>
+
     </BrowserRouter>
+
   );
 }
+
 
 export default App;

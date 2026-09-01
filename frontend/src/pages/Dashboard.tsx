@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 import {
   getDashboardData,
@@ -11,76 +12,58 @@ import type { Habit } from "../types/habit";
 import type { HabitCompletion } from "../types/habitCompletion";
 import type { TrackingPeriod } from "../types/trackingPeriod";
 
+import {
+  getCurrentUser,
+  type CurrentUser,
+} from "../services/authService";
+
+
 function Dashboard() {
+
+  // ==========================================
+  // NAVIGATION
+  // ==========================================
+
+  const navigate = useNavigate();
+
+
   // ==========================================
   // STATE
   // ==========================================
 
-  const [habits, setHabits] = useState<Habit[]>([]);
-  const [periods, setPeriods] = useState<TrackingPeriod[]>([]);
-  const [completions, setCompletions] = useState<HabitCompletion[]>([]);
+  const [habits, setHabits] =
+    useState<Habit[]>([]);
 
-  const [currentStreak, setCurrentStreak] = useState(0);
+  const [periods, setPeriods] =
+    useState<TrackingPeriod[]>([]);
 
-  const [loading, setLoading] = useState(true);
+  const [completions, setCompletions] =
+    useState<HabitCompletion[]>([]);
+
+  const [currentStreak, setCurrentStreak] =
+    useState(0);
+
+  const [user, setUser] =
+    useState<CurrentUser | null>(null);
+
+  const [loading, setLoading] =
+    useState(true);
+
   const [updatingHabitId, setUpdatingHabitId] =
     useState<number | null>(null);
 
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] =
+    useState<string | null>(null);
 
 
   // ==========================================
   // TODAY
   // ==========================================
 
-  const today = new Date()
-    .toISOString()
-    .split("T")[0];
-
-
-  // ==========================================
-  // LOAD DASHBOARD
-  // ==========================================
-
-  async function loadDashboard() {
-    try {
-      setLoading(true);
-      setError(null);
-
-      // Get habits and periods
-      const dashboardData =
-        await getDashboardData();
-
-      setHabits(dashboardData.habits);
-      setPeriods(dashboardData.periods);
-
-      // Get today's completions
-      const todayCompletions =
-        await getTodayCompletions(today);
-
-      setCompletions(todayCompletions);
-
-      // Get REAL streak from backend
-      const summary =
-        await getDashboardSummary();
-
-      setCurrentStreak(
-        summary.current_streak
-      );
-
-    } catch (err) {
-      console.error(err);
-
-      setError(
-        err instanceof Error
-          ? err.message
-          : "Failed to load dashboard"
-      );
-
-    } finally {
-      setLoading(false);
-    }
-  }
+  const today =
+    new Date()
+      .toISOString()
+      .split("T")[0];
 
 
   // ==========================================
@@ -88,8 +71,87 @@ function Dashboard() {
   // ==========================================
 
   useEffect(() => {
-    loadDashboard();
-  }, []);
+
+    async function loadInitialData() {
+
+      try {
+
+        setLoading(true);
+        setError(null);
+
+
+        // --------------------------------------
+        // Get dashboard data
+        // --------------------------------------
+
+        const dashboardData =
+          await getDashboardData();
+
+        setHabits(
+          dashboardData.habits
+        );
+
+        setPeriods(
+          dashboardData.periods
+        );
+
+
+        // --------------------------------------
+        // Get today's completions
+        // --------------------------------------
+
+        const todayCompletions =
+          await getTodayCompletions(today);
+
+        setCompletions(
+          todayCompletions
+        );
+
+
+        // --------------------------------------
+        // Get current streak
+        // --------------------------------------
+
+        const summary =
+          await getDashboardSummary();
+
+        setCurrentStreak(
+          summary.current_streak
+        );
+
+
+        // --------------------------------------
+        // Get current user
+        // --------------------------------------
+
+        const currentUser =
+          await getCurrentUser();
+
+        setUser(currentUser);
+
+
+      } catch (err) {
+
+        console.error(err);
+
+        setError(
+          err instanceof Error
+            ? err.message
+            : "Failed to load dashboard"
+        );
+
+      } finally {
+
+        setLoading(false);
+
+      }
+
+    }
+
+
+    void loadInitialData();
+
+  }, [today]);
 
 
   // ==========================================
@@ -99,8 +161,13 @@ function Dashboard() {
   async function handleToggleHabit(
     habitId: number
   ) {
+
     try {
-      setUpdatingHabitId(habitId);
+
+      setUpdatingHabitId(
+        habitId
+      );
+
 
       const existingCompletion =
         completions.find(
@@ -109,8 +176,10 @@ function Dashboard() {
             completion.completion_date === today
         );
 
+
       const newCompleted =
         !existingCompletion?.completed;
+
 
       const updatedCompletion =
         await updateHabitCompletion(
@@ -119,15 +188,23 @@ function Dashboard() {
           newCompleted
         );
 
+
+      // ----------------------------------------
       // Update local completion state
+      // ----------------------------------------
+
       setCompletions((current) => {
-        const exists = current.some(
-          (completion) =>
-            completion.habit_id === habitId &&
-            completion.completion_date === today
-        );
+
+        const exists =
+          current.some(
+            (completion) =>
+              completion.habit_id === habitId &&
+              completion.completion_date === today
+          );
+
 
         if (exists) {
+
           return current.map(
             (completion) =>
               completion.habit_id === habitId &&
@@ -135,15 +212,22 @@ function Dashboard() {
                 ? updatedCompletion
                 : completion
           );
+
         }
+
 
         return [
           ...current,
           updatedCompletion,
         ];
+
       });
 
-      // Get REAL streak from backend again
+
+      // ----------------------------------------
+      // Refresh streak
+      // ----------------------------------------
+
       const summary =
         await getDashboardSummary();
 
@@ -151,7 +235,9 @@ function Dashboard() {
         summary.current_streak
       );
 
+
     } catch (err) {
+
       console.error(err);
 
       setError(
@@ -161,8 +247,13 @@ function Dashboard() {
       );
 
     } finally {
-      setUpdatingHabitId(null);
+
+      setUpdatingHabitId(
+        null
+      );
+
     }
+
   }
 
 
@@ -170,22 +261,27 @@ function Dashboard() {
   // ACTIVE HABITS FOR TODAY
   // ==========================================
 
-  const todayHabits = habits.filter(
-    (habit) => {
-      const startsTodayOrEarlier =
-        habit.start_date <= today;
+  const todayHabits =
+    habits.filter(
+      (habit) => {
 
-      const endsTodayOrLater =
-        !habit.end_date ||
-        habit.end_date >= today;
+        const startsTodayOrEarlier =
+          habit.start_date <= today;
 
-      return (
-        habit.is_active &&
-        startsTodayOrEarlier &&
-        endsTodayOrLater
-      );
-    }
-  );
+
+        const endsTodayOrLater =
+          !habit.end_date ||
+          habit.end_date >= today;
+
+
+        return (
+          habit.is_active &&
+          startsTodayOrEarlier &&
+          endsTodayOrLater
+        );
+
+      }
+    );
 
 
   // ==========================================
@@ -211,7 +307,9 @@ function Dashboard() {
   const progressPercentage =
     totalToday > 0
       ? Math.round(
-          (completedCount / totalToday) * 100
+          (completedCount /
+            totalToday) *
+            100
         )
       : 0;
 
@@ -234,35 +332,59 @@ function Dashboard() {
   // ==========================================
 
   let currentDay = 0;
+
   let totalDays = 0;
 
+
   if (activePeriod) {
+
     const start =
-      new Date(activePeriod.start_date);
+      new Date(
+        `${activePeriod.start_date}T00:00:00`
+      );
+
 
     const end =
-      new Date(activePeriod.end_date);
+      new Date(
+        `${activePeriod.end_date}T00:00:00`
+      );
+
 
     const current =
-      new Date(today);
+      new Date(
+        `${today}T00:00:00`
+      );
+
 
     totalDays =
       Math.floor(
-        (end.getTime() - start.getTime()) /
-          (1000 * 60 * 60 * 24)
+        (
+          end.getTime() -
+          start.getTime()
+        ) /
+        (1000 * 60 * 60 * 24)
       ) + 1;
+
 
     currentDay =
       Math.floor(
-        (current.getTime() - start.getTime()) /
-          (1000 * 60 * 60 * 24)
+        (
+          current.getTime() -
+          start.getTime()
+        ) /
+        (1000 * 60 * 60 * 24)
       ) + 1;
+
 
     currentDay =
       Math.max(
         0,
-        Math.min(currentDay, totalDays)
+        Math.min(
+          currentDay,
+          totalDays
+        )
       );
+
   }
 
 
@@ -271,7 +393,10 @@ function Dashboard() {
   // ==========================================
 
   const todayDate =
-    new Date(`${today}T00:00:00`);
+    new Date(
+      `${today}T00:00:00`
+    );
+
 
   const formattedDate =
     todayDate.toLocaleDateString(
@@ -282,6 +407,7 @@ function Dashboard() {
         year: "numeric",
       }
     );
+
 
   const formattedUpperDate =
     todayDate
@@ -298,15 +424,43 @@ function Dashboard() {
 
 
   // ==========================================
+  // GREETING
+  // ==========================================
+
+  const displayName =
+    user?.name ?? "there";
+
+
+  const currentHour =
+    new Date().getHours();
+
+
+  const greeting =
+    currentHour < 12
+      ? "Good morning"
+      : currentHour < 18
+      ? "Good afternoon"
+      : "Good evening";
+
+
+  // ==========================================
   // LOADING
   // ==========================================
 
   if (loading) {
+
     return (
+
       <div className="page">
-        <p>Loading dashboard...</p>
+
+        <p>
+          Loading dashboard...
+        </p>
+
       </div>
+
     );
+
   }
 
 
@@ -315,7 +469,9 @@ function Dashboard() {
   // ==========================================
 
   return (
+
     <div className="page">
+
 
       {/* ======================================
           HEADER
@@ -329,9 +485,11 @@ function Dashboard() {
             {formattedUpperDate}
           </p>
 
+
           <h2>
-            Good evening, Naren 👋
+            {greeting}, {displayName} 👋
           </h2>
+
 
           <p className="page-subtitle">
             Stay consistent. Small actions compound.
@@ -339,7 +497,14 @@ function Dashboard() {
 
         </div>
 
-        <button className="primary-button">
+
+        <button
+          type="button"
+          className="primary-button"
+          onClick={() =>
+            navigate("/habits")
+          }
+        >
           + Add Habit
         </button>
 
@@ -351,9 +516,13 @@ function Dashboard() {
       ====================================== */}
 
       {error && (
+
         <div className="error-message">
+
           {error}
+
         </div>
+
       )}
 
 
@@ -363,6 +532,7 @@ function Dashboard() {
 
       <section className="stats-grid">
 
+
         {/* TODAY'S PROGRESS */}
 
         <div className="stat-card">
@@ -371,20 +541,24 @@ function Dashboard() {
             TODAY'S PROGRESS
           </span>
 
+
           <div className="stat-value">
             {progressPercentage}%
           </div>
+
 
           <div className="progress-bar">
 
             <div
               className="progress-fill"
               style={{
-                width: `${progressPercentage}%`,
+                width:
+                  `${progressPercentage}%`,
               }}
             />
 
           </div>
+
 
           <span className="stat-description">
 
@@ -404,9 +578,11 @@ function Dashboard() {
             COMPLETED TODAY
           </span>
 
+
           <div className="stat-value">
             {completedCount}
           </div>
+
 
           <span className="stat-description">
 
@@ -429,6 +605,7 @@ function Dashboard() {
             CURRENT STREAK
           </span>
 
+
           <div className="stat-value">
 
             {currentStreak}
@@ -438,6 +615,7 @@ function Dashboard() {
             </span>
 
           </div>
+
 
           <span className="stat-description">
 
@@ -479,7 +657,14 @@ function Dashboard() {
 
             </div>
 
-            <button className="text-button">
+
+            <button
+              type="button"
+              className="text-button"
+              onClick={() =>
+                navigate("/habits")
+              }
+            >
               View all →
             </button>
 
@@ -515,26 +700,33 @@ function Dashboard() {
                         item.completion_date === today
                     );
 
+
                   const completed =
                     completion?.completed === true;
 
+
                   const updating =
                     updatingHabitId === habit.id;
+
 
                   return (
 
                     <div
                       key={habit.id}
-                      className={`habit-row ${
-                        completed
-                          ? "completed"
-                          : ""
-                      }`}
+                      className={
+                        `habit-row ${
+                          completed
+                            ? "completed"
+                            : ""
+                        }`
+                      }
                     >
+
 
                       {/* CHECK */}
 
                       <button
+                        type="button"
                         className="habit-check"
                         onClick={() =>
                           handleToggleHabit(
@@ -548,9 +740,11 @@ function Dashboard() {
                             : "Mark complete"
                         }
                       >
+
                         {completed
                           ? "✓"
                           : ""}
+
                       </button>
 
 
@@ -581,6 +775,7 @@ function Dashboard() {
                       ) : (
 
                         <button
+                          type="button"
                           className="complete-button"
                           onClick={() =>
                             handleToggleHabit(
@@ -589,9 +784,11 @@ function Dashboard() {
                           }
                           disabled={updating}
                         >
+
                           {updating
                             ? "Updating..."
                             : "Complete"}
+
                         </button>
 
                       )}
@@ -599,6 +796,7 @@ function Dashboard() {
                     </div>
 
                   );
+
                 }
               )
 
@@ -620,15 +818,17 @@ function Dashboard() {
             <div>
 
               <h3>
-                {activePeriod?.name ||
-                  "Winter Arc"}
+                {activePeriod
+                  ? activePeriod.name
+                  : "No tracking period"}
               </h3>
+
 
               <p>
 
                 {activePeriod
                   ? `${activePeriod.start_date} — ${activePeriod.end_date}`
-                  : "No active tracking period"}
+                  : "Create a tracking period to start your journey."}
 
               </p>
 
@@ -637,58 +837,91 @@ function Dashboard() {
           </div>
 
 
-          <div className="period-progress">
+          {activePeriod ? (
 
-            <div className="period-circle">
+            <>
+              {/* PERIOD EXISTS */}
 
-              <strong>
-                {currentDay}
-              </strong>
+              <div className="period-progress">
 
-              <span>
-                day
-              </span>
+                <div className="period-circle">
 
-            </div>
+                  <strong>
+                    {currentDay}
+                  </strong>
 
+                  <span>
+                    day
+                  </span>
 
-            <div className="period-info">
-
-              <strong>
-                Day {currentDay} of {totalDays}
-              </strong>
-
-              <span>
-
-                {currentDay > 0
-                  ? "Your journey is in progress."
-                  : "Your journey has not started."}
-
-              </span>
-
-            </div>
-
-          </div>
+                </div>
 
 
-          <div className="period-footer">
+                <div className="period-info">
 
-            <span>
-              {todayHabits.length} active habits
-            </span>
+                  <strong>
+                    Day {currentDay} of {totalDays}
+                  </strong>
 
-            <span>
-              {totalDays} days
-            </span>
+                  <span>
 
-          </div>
+                    {currentDay > 0
+                      ? "Your journey is in progress."
+                      : "Your journey has not started."}
+
+                  </span>
+
+                </div>
+
+              </div>
+
+
+              <div className="period-footer">
+
+                <span>
+                  {todayHabits.length} active habits
+                </span>
+
+                <span>
+                  {totalDays} days
+                </span>
+
+              </div>
+
+            </>
+
+          ) : (
+
+            <>
+              {/* NO TRACKING PERIOD */}
+
+              <div className="empty-state">
+
+                <h3>
+                  No tracking period
+                </h3>
+
+                <p>
+                  You haven't created a tracking
+                  period yet. Create one to start
+                  tracking your progress.
+                </p>
+
+              </div>
+
+            </>
+
+          )}
 
         </div>
 
       </section>
 
     </div>
+
   );
+
 }
+
 
 export default Dashboard;

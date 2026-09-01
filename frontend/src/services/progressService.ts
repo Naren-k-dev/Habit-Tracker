@@ -36,6 +36,41 @@ export interface WeeklyProgress {
   days: WeeklyDayProgress[];
 }
 
+// ==========================================
+// MONTHLY PROGRESS TYPES
+// ==========================================
+
+export interface MonthlyDayProgress {
+  date: string;
+  total_habits: number;
+  completed_habits: number;
+  missed_habits: number;
+  pending_habits: number;
+  progress_percentage: number;
+}
+
+export interface MonthlyHabitProgress {
+  habit_id: number;
+  habit_name: string;
+  total_days: number;
+  completed_days: number;
+  missed_days: number;
+  pending_days: number;
+  progress_percentage: number;
+}
+
+export interface MonthlyProgress {
+  month_start: string;
+  month_end: string;
+  total_habits: number;
+  total_completed: number;
+  total_missed: number;
+  total_pending: number;
+  progress_percentage: number;
+  days: MonthlyDayProgress[];
+  habit_progress: MonthlyHabitProgress[];
+}
+
 export async function getDailyProgress(
   date: string
 ): Promise<DailyProgress> {
@@ -49,5 +84,13 @@ export async function getWeeklyProgress(
 ): Promise<WeeklyProgress> {
   return apiRequest<WeeklyProgress>(
     `/api/progress/weekly/${weekStart}`
+  );
+}
+
+export async function getMonthlyProgress(
+  monthStart: string
+): Promise<MonthlyProgress> {
+  return apiRequest<MonthlyProgress>(
+    `/api/progress/monthly/${monthStart}`
   );
 }
