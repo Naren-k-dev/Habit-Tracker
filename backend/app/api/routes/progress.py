@@ -9,11 +9,13 @@ from app.core.security import get_current_user
 from app.schemas.progress import (
     DailyProgressResponse,
     WeeklyProgressResponse,
+    MonthlyProgressResponse,
 )
 
 from app.services.progress_service import (
     get_daily_progress,
     get_weekly_progress,
+    get_monthly_progress,
 )
 
 
@@ -69,4 +71,23 @@ def get_weekly_progress_route(
         db,
         current_user_id,
         week_start
+    )
+
+# ==========================================
+# MONTHLY PROGRESS
+# ==========================================
+
+@router.get(
+    "/monthly/{month_start}",
+    response_model=MonthlyProgressResponse
+)
+def get_monthly_progress_route(
+    month_start: date,
+    db: Session = Depends(get_db),
+    current_user_id: int = Depends(get_current_user),
+):
+    return get_monthly_progress(
+        db,
+        current_user_id,
+        month_start
     )
