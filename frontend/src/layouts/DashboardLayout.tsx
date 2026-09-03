@@ -1,19 +1,35 @@
 import { useEffect, useState } from "react";
 import { Outlet } from "react-router-dom";
+
 import Sidebar from "../components/Sidebar";
 
 function DashboardLayout() {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarOpen, setSidebarOpen] =
+    useState(false);
+
+
+  // ==========================================
+  // OPEN SIDEBAR
+  // ==========================================
 
   function openSidebar() {
     setSidebarOpen(true);
   }
 
+
+  // ==========================================
+  // CLOSE SIDEBAR
+  // ==========================================
+
   function closeSidebar() {
     setSidebarOpen(false);
   }
 
-  // Prevent background scrolling when mobile sidebar is open
+
+  // ==========================================
+  // PREVENT BODY SCROLL
+  // ==========================================
+
   useEffect(() => {
     if (sidebarOpen) {
       document.body.style.overflow = "hidden";
@@ -26,10 +42,14 @@ function DashboardLayout() {
     };
   }, [sidebarOpen]);
 
+
   return (
     <div className="app-shell">
 
-      {/* MOBILE TOP BAR */}
+      {/* ======================================
+          MOBILE TOP BAR
+      ====================================== */}
+
       <header className="mobile-topbar">
 
         <button
@@ -42,21 +62,32 @@ function DashboardLayout() {
           ☰
         </button>
 
+
         <div className="mobile-brand">
+
           <div className="mobile-logo-mark">
             H
           </div>
 
           <div>
-            <strong>HabitFlow</strong>
-            <span>Build your consistency</span>
+            <strong>
+              HabitFlow
+            </strong>
+
+            <span>
+              Build your consistency
+            </span>
           </div>
+
         </div>
 
       </header>
 
 
-      {/* MOBILE OVERLAY */}
+      {/* ======================================
+          MOBILE OVERLAY
+      ====================================== */}
+
       {sidebarOpen && (
         <button
           type="button"
@@ -67,14 +98,20 @@ function DashboardLayout() {
       )}
 
 
-      {/* SIDEBAR */}
+      {/* ======================================
+          SIDEBAR
+      ====================================== */}
+
       <Sidebar
         isOpen={sidebarOpen}
         onClose={closeSidebar}
       />
 
 
-      {/* PAGE CONTENT */}
+      {/* ======================================
+          PAGE CONTENT
+      ====================================== */}
+
       <main className="main-content">
         <Outlet />
       </main>

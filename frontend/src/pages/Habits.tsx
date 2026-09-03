@@ -8,6 +8,14 @@ import type {
 } from "react";
 
 import {
+  Link,
+} from "react-router-dom";
+
+import {
+  useNavigate,
+} from "react-router-dom";
+
+import {
   getMyHabits,
   createHabit,
   updateHabit,
@@ -51,6 +59,8 @@ function Habits() {
 
   const [creating, setCreating] =
     useState(false);
+
+  const navigate = useNavigate();
 
 
   // ==========================================
@@ -812,45 +822,70 @@ useEffect(() => {
 
 
         {/* ====================================
-            EMPTY
-        ==================================== */}
+    EMPTY
+==================================== */}
 
-        {!loading &&
-          habits.length === 0 && (
+{!loading &&
+  habits.length === 0 && (
 
-            <div className="empty-state">
+    <div className="empty-state">
 
-              <div className="empty-state-icon">
-                +
-              </div>
+      <div className="empty-state-icon">
+        {trackingPeriods.length === 0
+          ? "◷"
+          : "+"}
+      </div>
 
-              <h3>
-                No habits yet
-              </h3>
+      {trackingPeriods.length === 0 ? (
 
-              <p>
-                Start building your routine
-                by creating your first habit.
-              </p>
+        <>
+          <h3>
+            Create a tracking period first
+          </h3>
 
-              <button
-                className="primary-button"
-                onClick={
-                  openCreateModal
-                }
-                disabled={
-                  periodsLoading ||
-                  trackingPeriods.length === 0
-                }
-              >
-                Create your first habit
-              </button>
+          <p>
+            You need to create a tracking
+            period before you can create
+            a habit.
+          </p>
 
-            </div>
+          <button
+            type="button"
+            className="primary-button"
+            onClick={() =>
+              navigate("/tracking-period")
+            }
+          >
+            Create Tracking Period →
+          </button>
+        </>
 
-          )}
+      ) : (
 
+        <>
+          <h3>
+            No habits yet
+          </h3>
 
+          <p>
+            Start building your routine
+            by creating your first habit.
+          </p>
+
+          <button
+            type="button"
+            className="primary-button"
+            onClick={openCreateModal}
+          >
+            Create your first habit
+          </button>
+        </>
+
+      )}
+
+    </div>
+
+  )}
         {/* ====================================
             HABIT LIST
         ==================================== */}
